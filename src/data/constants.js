@@ -8,12 +8,11 @@ export const BRANDS = [
 ]
 
 export const PLATFORMS = [
-  { id: 'instagram', name: 'Instagram', icon: '📸' },
-  { id: 'facebook', name: 'Facebook', icon: '👥' },
-  { id: 'tiktok', name: 'TikTok', icon: '🎵' },
+  { id: 'meta-organic', name: 'Meta Ads - Organic', icon: '📱' },
   { id: 'paid-ads', name: 'Paid Ads', icon: '📢' },
   { id: 'email', name: 'Email', icon: '📧' },
   { id: 'push', name: 'Push Notification', icon: '🔔' },
+  { id: 'web-push', name: 'Web Push', icon: '🌐' },
   { id: 'whatsapp', name: 'WhatsApp', icon: '💬' },
 ]
 
