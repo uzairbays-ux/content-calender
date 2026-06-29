@@ -1,49 +1,90 @@
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, isToday, isTomorrow, isPast } from 'date-fns'
 import { PLATFORMS, STATUSES } from '../data/constants'
 
 export default function ExecutorView({ cards, brands, onCardClick, onStatusChange }) {
   const readyCards = cards
-    .filter(c => c.status === 'ready' || c.status === 'scheduled')
+    .filter(c => c.status === 'ready')
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
 
-  const grouped = readyCards.reduce((acc, card) => {
-    const date = card.date ? card.date.slice(0, 10) : 'No Date'
-    if (!acc[date]) acc[date] = []
-    acc[date].push(card)
-    return acc
-  }, {})
+  const scheduledCards = cards
+    .filter(c => c.status === 'scheduled')
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
 
-  if (readyCards.length === 0) {
+  const hasAnything = readyCards.length > 0 || scheduledCards.length > 0
+
+  if (!hasAnything) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-gray-400">
         <span className="text-5xl mb-3">🎯</span>
-        <p className="text-lg font-medium">No cards ready to execute</p>
+        <p className="text-lg font-medium">No cards in the queue</p>
         <p className="text-sm">Cards marked "Ready to Execute" will appear here</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-2">
-        <span className="text-lg">🚀</span>
-        <span className="text-sm font-medium text-amber-800">
-          {readyCards.length} post{readyCards.length !== 1 ? 's' : ''} ready — grab the creative and schedule.
-        </span>
-      </div>
+    <div className="space-y-8">
 
+      {/* ── READY TO EXECUTE ── */}
+      {readyCards.length > 0 && (
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-orange-100 text-orange-600 rounded-xl px-4 py-2 flex items-center gap-2">
+              <span className="text-lg">🚀</span>
+              <span className="font-semibold text-sm">{readyCards.length} Ready to Execute</span>
+            </div>
+            <p className="text-sm text-gray-400">Pick up a card, grab the creative, and schedule it in your tool.</p>
+          </div>
+          <CardGroup cards={readyCards} brands={brands} onCardClick={onCardClick}
+            onAction={(id) => onStatusChange(id, 'scheduled')}
+            actionLabel="Mark Scheduled"
+            actionColor="bg-blue-500 hover:bg-blue-600"
+          />
+        </section>
+      )}
+
+      {/* ── SCHEDULED — GOING LIVE ── */}
+      {scheduledCards.length > 0 && (
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-blue-100 text-blue-700 rounded-xl px-4 py-2 flex items-center gap-2">
+              <span className="text-lg">🕐</span>
+              <span className="font-semibold text-sm">{scheduledCards.length} Scheduled — Going Live</span>
+            </div>
+            <p className="text-sm text-gray-400">These are queued in your marketing tool. Mark published once live.</p>
+          </div>
+          <CardGroup cards={scheduledCards} brands={brands} onCardClick={onCardClick}
+            onAction={(id) => onStatusChange(id, 'published')}
+            actionLabel="✅ Mark Published"
+            actionColor="bg-green-500 hover:bg-green-600"
+            showCountdown
+          />
+        </section>
+      )}
+    </div>
+  )
+}
+
+function CardGroup({ cards, brands, onCardClick, onAction, actionLabel, actionColor, showCountdown }) {
+  const grouped = cards.reduce((acc, card) => {
+    const date = card.date ? card.date.slice(0, 10) : 'no-date'
+    if (!acc[date]) acc[date] = []
+    acc[date].push(card)
+    return acc
+  }, {})
+
+  return (
+    <div className="space-y-5">
       {Object.entries(grouped).map(([date, dayCards]) => (
         <div key={date}>
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <span>📅</span>
-            {date !== 'No Date' ? format(parseISO(date), 'EEEE, MMM d yyyy') : 'No Date Set'}
-          </h3>
-          <div className="space-y-3">
+          <DateLabel date={date} showCountdown={showCountdown} />
+          <div className="space-y-3 mt-2">
             {dayCards.map(card => (
               <ExecutorCard key={card.id} card={card} brands={brands}
                 onClick={() => onCardClick(card)}
-                onMarkScheduled={() => onStatusChange(card.id, 'scheduled')}
-                onMarkPublished={() => onStatusChange(card.id, 'published')}
+                onAction={() => onAction(card.id)}
+                actionLabel={actionLabel}
+                actionColor={actionColor}
               />
             ))}
           </div>
@@ -53,7 +94,27 @@ export default function ExecutorView({ cards, brands, onCardClick, onStatusChang
   )
 }
 
-function ExecutorCard({ card, brands, onClick, onMarkScheduled, onMarkPublished }) {
+function DateLabel({ date, showCountdown }) {
+  if (date === 'no-date') {
+    return <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">📅 No Date Set</p>
+  }
+
+  const d = parseISO(date)
+  const label = isToday(d) ? '📅 Today' : isTomorrow(d) ? '📅 Tomorrow' : `📅 ${format(d, 'EEEE, MMM d yyyy')}`
+  const overdue = showCountdown && isPast(d) && !isToday(d)
+
+  return (
+    <div className="flex items-center gap-2">
+      <p className={`text-sm font-bold uppercase tracking-wider ${overdue ? 'text-red-500' : 'text-gray-500'}`}>
+        {label}
+      </p>
+      {overdue && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">Overdue</span>}
+      {showCountdown && isToday(d) && <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-medium">Going live today</span>}
+    </div>
+  )
+}
+
+function ExecutorCard({ card, brands, onClick, onAction, actionLabel, actionColor }) {
   const brand = brands.find(b => b.id === card.brand_id)
   const platform = PLATFORMS.find(p => p.id === card.platform)
   const status = STATUSES.find(s => s.id === card.status)
@@ -74,7 +135,7 @@ function ExecutorCard({ card, brands, onClick, onMarkScheduled, onMarkPublished 
                 {brand && <span className="text-xs px-2 py-0.5 rounded-full text-white font-medium" style={{ backgroundColor: brand.color }}>{brand.name}</span>}
                 {platform && <span className="text-xs text-gray-600 font-medium">{platform.icon} {platform.name}</span>}
                 {card.collection && <span className="text-xs text-gray-400">{card.collection}</span>}
-                {card.time && <span className="text-xs text-gray-400">🕐 {card.time?.slice(0,5)}</span>}
+                {card.time && <span className="text-xs text-gray-500 font-medium">🕐 {card.time?.slice(0, 5)}</span>}
               </div>
             </div>
             <span className="text-xs px-2 py-1 rounded-full font-medium shrink-0" style={{ backgroundColor: status?.bg, color: status?.color }}>
@@ -112,7 +173,7 @@ function ExecutorCard({ card, brands, onClick, onMarkScheduled, onMarkPublished 
 
           <div className="flex items-center gap-2 flex-wrap">
             <button onClick={onClick} className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium">
-              View Full Card
+              View Card
             </button>
             {card.image_data && (
               <a href={card.image_data} download={`creative-${card.id}.jpg`}
@@ -121,18 +182,10 @@ function ExecutorCard({ card, brands, onClick, onMarkScheduled, onMarkPublished 
                 ⬇️ Download Creative
               </a>
             )}
-            {card.status === 'ready' && (
-              <button onClick={e => { e.stopPropagation(); onMarkScheduled() }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 font-medium">
-                Mark Scheduled
-              </button>
-            )}
-            {card.status === 'scheduled' && (
-              <button onClick={e => { e.stopPropagation(); onMarkPublished() }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-green-500 text-white hover:bg-green-600 font-medium">
-                ✅ Mark Published
-              </button>
-            )}
+            <button onClick={e => { e.stopPropagation(); onAction() }}
+              className={`text-xs px-3 py-1.5 rounded-lg text-white font-medium ${actionColor}`}>
+              {actionLabel}
+            </button>
           </div>
         </div>
       </div>
