@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { PLATFORMS, STATUSES } from '../data/constants'
 
-export default function Sidebar({ cards, brands, filters, onFilterChange, activeView, onViewChange, onAddBrand }) {
+export default function Sidebar({ cards, brands, filters, onFilterChange, onClearFilters, activeView, onViewChange, onAddBrand }) {
   const [newBrand, setNewBrand] = useState({ name: '', color: '#1976d2' })
   const [showBrandForm, setShowBrandForm] = useState(false)
 
@@ -19,6 +19,8 @@ export default function Sidebar({ cards, brands, filters, onFilterChange, active
     setNewBrand({ name: '', color: '#1976d2' })
     setShowBrandForm(false)
   }
+
+  const hasFilters = filters.brand || filters.platform || filters.status
 
   return (
     <aside className="flex flex-col gap-5 h-full overflow-y-auto">
@@ -51,6 +53,14 @@ export default function Sidebar({ cards, brands, filters, onFilterChange, active
           </button>
         ))}
       </div>
+
+      {/* Clear filters */}
+      {hasFilters && (
+        <button onClick={onClearFilters}
+          className="w-full text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg px-3 py-2 text-left flex items-center gap-2 transition-colors">
+          <span>✕</span> Clear All Filters
+        </button>
+      )}
 
       {/* Status */}
       <div>

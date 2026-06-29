@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { PLATFORMS, STATUSES } from '../data/constants'
+import { CHECKLIST } from './checklist.js'
 
 const EMPTY = {
   title: '', brand_id: '', brand_name: '',
@@ -10,16 +11,6 @@ const EMPTY = {
   notes: '', status: 'draft', date: '', time: '', created_by: '',
 }
 
-// Required fields and how to check them
-const CHECKLIST = [
-  { key: 'brand_id',      label: 'Brand selected',        check: f => !!f.brand_id },
-  { key: 'platform',      label: 'Platform selected',     check: f => !!f.platform },
-  { key: 'promote',       label: 'Collection or Product', check: f => !!(f.collection || f.product_name) },
-  { key: 'audience_name', label: 'Audience defined',      check: f => !!f.audience_name },
-  { key: 'copy',          label: 'Caption / Copy written', check: f => f.copy?.trim().length > 10 },
-  { key: 'image_data',    label: 'Creative uploaded',     check: f => !!f.image_data },
-  { key: 'date',          label: 'Post date set',         check: f => !!f.date },
-]
 
 function getProgress(form) {
   const done = CHECKLIST.filter(c => c.check(form)).length

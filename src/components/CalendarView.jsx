@@ -22,8 +22,8 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
   const events = filtered.map(card => {
     const brand = brands.find(b => b.id === card.brand_id)
     const platform = PLATFORMS.find(p => p.id === card.platform)
+    const brandColor = brand?.color || STATUS_COLORS[card.status] || '#1976d2'
 
-    // Build start datetime — use time if available so it shows on the time grid
     const start = card.date
       ? card.time
         ? `${card.date.slice(0, 10)}T${card.time.slice(0, 5)}`
@@ -32,13 +32,12 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
 
     return {
       id: card.id,
-      title: `${platform?.icon || ''} ${card.title || card.product_name || 'Untitled'}`,
+      title: `${platform?.icon || ''} ${card.title || card.product_name || card.collection || 'Untitled'}`,
       start,
-      // allDay if no time set
       allDay: !card.time,
-      backgroundColor: brand?.color || STATUS_COLORS[card.status] || '#1976d2',
-      borderColor: brand?.color || STATUS_COLORS[card.status] || '#1976d2',
-      extendedProps: { card },
+      backgroundColor: brandColor,
+      borderColor: brandColor,
+      extendedProps: { card: { ...card, _brandColor: brandColor } },
     }
   })
 

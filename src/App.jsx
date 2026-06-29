@@ -4,17 +4,33 @@ import CalendarView from './components/CalendarView'
 import ExecutorView from './components/ExecutorView'
 import Sidebar from './components/Sidebar'
 import CardModal from './components/CardModal'
+import CardDetail from './components/CardDetail'
 
 export default function App() {
   const { cards, loading, error, addCard, updateCard, updateStatus, moveCard, deleteCard } = useCards()
   const { brands, addBrand } = useBrands()
   const { audiences, addAudience } = useAudiences()
+
+  // modal: null | { mode: 'new', date } | { mode: 'edit', card } | { mode: 'detail', card }
   const [modal, setModal] = useState(null)
   const [filters, setFilters] = useState({ brand: '', platform: '', status: '' })
   const [view, setView] = useState('calendar')
 
+  function handleCardClick(card) {
+    // Draft cards go to edit; everything else goes to read-only detail
+    if (card.status === 'draft') {
+      setModal({ mode: 'edit', card })
+    } else {
+      setModal({ mode: 'detail', card })
+    }
+  }
+
   function handleFilterChange(key, value) {
     setFilters(f => ({ ...f, [key]: value }))
+  }
+
+  function clearFilters() {
+    setFilters({ brand: '', platform: '', status: '' })
   }
 
   async function handleSave(form) {
@@ -52,6 +68,7 @@ export default function App() {
             brands={brands}
             filters={filters}
             onFilterChange={handleFilterChange}
+            onClearFilters={clearFilters}
             activeView={view}
             onViewChange={setView}
             onAddBrand={addBrand}
@@ -66,7 +83,7 @@ export default function App() {
               brands={brands}
               filters={filters}
               onDayClick={date => setModal({ mode: 'new', date })}
-              onCardClick={card => setModal({ mode: 'edit', card })}
+              onCardClick={handleCardClick}
               onCardDrop={moveCard}
             />
           )}
@@ -74,21 +91,44 @@ export default function App() {
             <ExecutorView
               cards={cards}
               brands={brands}
-              onCardClick={card => setModal({ mode: 'edit', card })}
+              onCardClick={handleCardClick}
               onStatusChange={updateStatus}
             />
           )}
         </main>
       </div>
 
-      {modal && (
+      {/* Edit modal — drafts only */}
+      {modal?.mode === 'new' && (
         <CardModal
-          card={modal.mode === 'edit' ? modal.card : null}
-          defaultDate={modal.mode === 'new' ? modal.date : undefined}
+          card={null}
+          defaultDate={modal.date}
           brands={brands}
           audiences={audiences}
           onSave={handleSave}
           onClose={() => setModal(null)}
+          onDelete={deleteCard}
+        />
+      )}
+      {modal?.mode === 'edit' && (
+        <CardModal
+          card={modal.card}
+          brands={brands}
+          audiences={audiences}
+          onSave={handleSave}
+          onClose={() => setModal(null)}
+          onDelete={deleteCard}
+        />
+      )}
+
+      {/* Read-only detail — ready/scheduled/published */}
+      {modal?.mode === 'detail' && (
+        <CardDetail
+          card={modal.card}
+          brands={brands}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ mode: 'edit', card: modal.card })}
+          onStatusChange={updateStatus}
           onDelete={deleteCard}
         />
       )}
