@@ -81,6 +81,11 @@ router.patch('/:id/date', async (req, res) => {
   res.json(rows[0])
 })
 
+router.delete('/all', async (req, res) => {
+  await pool.query(`DELETE FROM content_cards`)
+  res.json({ ok: true, deleted: 'all' })
+})
+
 router.delete('/:id', async (req, res) => {
   await pool.query(`DELETE FROM content_cards WHERE id=$1`, [req.params.id])
   res.json({ ok: true })
