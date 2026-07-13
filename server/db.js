@@ -49,6 +49,12 @@ export async function initDB() {
       shopify_segment TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS flow_id UUID;
+    ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS flow_name TEXT;
+    ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS flow_step INT;
+    ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS flow_total INT;
+    ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS step_reason TEXT;
   `)
   console.log('DB tables ready')
 }

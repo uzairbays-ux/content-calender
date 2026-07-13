@@ -24,19 +24,22 @@ router.post('/', async (req, res) => {
   const {
     title, brand_id, brand_name, collection, product_name, product_url,
     platform, post_type, audience_name, audience_description,
-    copy, hashtags, image_data, notes, status, date, time, created_by
+    copy, hashtags, image_data, notes, status, date, time, created_by,
+    flow_id, flow_name, flow_step, flow_total, step_reason
   } = req.body
 
   const { rows } = await pool.query(
     `INSERT INTO content_cards
       (title, brand_id, brand_name, collection, product_name, product_url,
        platform, post_type, audience_name, audience_description,
-       copy, hashtags, image_data, notes, status, date, time, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+       copy, hashtags, image_data, notes, status, date, time, created_by,
+       flow_id, flow_name, flow_step, flow_total, step_reason)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
      RETURNING *`,
     [title, brand_id || null, brand_name, collection, product_name, product_url,
      platform, post_type, audience_name, audience_description,
-     copy, hashtags, image_data, notes, status || 'draft', date || null, time || null, created_by]
+     copy, hashtags, image_data, notes, status || 'draft', date || null, time || null, created_by,
+     flow_id || null, flow_name || null, flow_step || null, flow_total || null, step_reason || null]
   )
   res.status(201).json(rows[0])
 })
@@ -45,7 +48,8 @@ router.put('/:id', async (req, res) => {
   const {
     title, brand_id, brand_name, collection, product_name, product_url,
     platform, post_type, audience_name, audience_description,
-    copy, hashtags, image_data, notes, status, date, time, created_by
+    copy, hashtags, image_data, notes, status, date, time, created_by,
+    flow_id, flow_name, flow_step, flow_total, step_reason
   } = req.body
 
   const { rows } = await pool.query(
@@ -53,11 +57,15 @@ router.put('/:id', async (req, res) => {
       title=$1, brand_id=$2, brand_name=$3, collection=$4, product_name=$5, product_url=$6,
       platform=$7, post_type=$8, audience_name=$9, audience_description=$10,
       copy=$11, hashtags=$12, image_data=$13, notes=$14, status=$15,
-      date=$16, time=$17, created_by=$18, updated_at=NOW()
-     WHERE id=$19 RETURNING *`,
+      date=$16, time=$17, created_by=$18,
+      flow_id=$19, flow_name=$20, flow_step=$21, flow_total=$22, step_reason=$23,
+      updated_at=NOW()
+     WHERE id=$24 RETURNING *`,
     [title, brand_id || null, brand_name, collection, product_name, product_url,
      platform, post_type, audience_name, audience_description,
-     copy, hashtags, image_data, notes, status, date || null, time || null, created_by, req.params.id]
+     copy, hashtags, image_data, notes, status, date || null, time || null, created_by,
+     flow_id || null, flow_name || null, flow_step || null, flow_total || null, step_reason || null,
+     req.params.id]
   )
   if (!rows[0]) return res.status(404).json({ error: 'Card not found' })
   res.json(rows[0])

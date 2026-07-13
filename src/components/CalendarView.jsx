@@ -42,9 +42,10 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
       ? `${card.date.slice(0, 10)}T${card.time.slice(0, 5)}`
       : card.date.slice(0, 10)
 
+    const stepBadge = card.flow_step ? `${card.flow_step}/${card.flow_total} ` : ''
     return {
       id: card.id,
-      title: `${platform?.icon || ''} ${card.title || card.product_name || card.collection || 'Untitled'}`,
+      title: `${stepBadge}${platform?.icon || ''} ${card.title || card.product_name || card.collection || 'Untitled'}`,
       start,
       allDay: !card.time,
       backgroundColor: brandColor,

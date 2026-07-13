@@ -26,6 +26,18 @@ export default function CardDetail({ card, brands, onClose, onEdit, onStatusChan
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
+          {/* Flow context */}
+          {card.flow_id && (
+            <div className="px-6 py-3 bg-indigo-50/60 border-b border-indigo-100">
+              <p className="text-xs font-bold text-indigo-700">
+                ⚡ {card.flow_name} — Step {card.flow_step} of {card.flow_total}
+              </p>
+              {card.step_reason && (
+                <p className="text-xs text-indigo-500 italic mt-0.5">↳ {card.step_reason}</p>
+              )}
+            </div>
+          )}
+
           {/* Creative image */}
           {card.image_data && (
             <div className="relative bg-gray-100">

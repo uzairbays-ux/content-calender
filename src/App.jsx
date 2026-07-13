@@ -3,6 +3,7 @@ import { useCards, useBrands, useAudiences } from './data/store'
 import CalendarView from './components/CalendarView'
 import ExecutorView from './components/ExecutorView'
 import LibraryView from './components/LibraryView'
+import FlowsView from './components/FlowsView'
 import Sidebar from './components/Sidebar'
 import CardModal from './components/CardModal'
 import CardDetail from './components/CardDetail'
@@ -121,6 +122,14 @@ export default function App() {
               onCardDrop={moveCard}
             />
           )}
+          {view === 'flows' && (
+            <FlowsView
+              cards={cards}
+              brands={brands}
+              filters={filters}
+              onCardClick={handleCardClick}
+            />
+          )}
           {view === 'library' && (
             <LibraryView
               cards={cards}
@@ -149,6 +158,14 @@ export default function App() {
         >
           <span className="text-xl">📅</span>
           Calendar
+        </button>
+        <button
+          onClick={() => setView('flows')}
+          className={`flex-1 flex flex-col items-center py-3 text-xs font-medium gap-1 transition-colors
+            ${view === 'flows' ? 'text-blue-600' : 'text-gray-400'}`}
+        >
+          <span className="text-xl">⚡</span>
+          Flows
         </button>
         <button
           onClick={() => setView('library')}

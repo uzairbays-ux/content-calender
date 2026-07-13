@@ -38,6 +38,7 @@ export default function Sidebar({ cards, brands, filters, onFilterChange, onClea
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Views</p>
         {[
           { id: 'calendar', icon: '📅', label: 'Calendar' },
+          { id: 'flows', icon: '⚡', label: 'Campaign Flows', badge: new Set(cards.filter(c => c.flow_id).map(c => c.flow_id)).size },
           { id: 'library', icon: '📚', label: 'Content Library', badge: cards.filter(c => !c.date).length },
           { id: 'executor', icon: '🚀', label: 'Executor Queue', badge: counts.ready + counts.scheduled },
         ].map(v => (

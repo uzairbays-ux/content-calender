@@ -9,6 +9,7 @@ const EMPTY = {
   platform: '', audience_name: '', audience_description: '',
   copy: '', hashtags: '', image_data: null,
   notes: '', status: 'draft', date: '', time: '', created_by: '',
+  flow_id: null, flow_name: null, flow_step: null, flow_total: null, step_reason: null,
 }
 
 
@@ -297,6 +298,9 @@ function mapCard(c) {
     image_data: c.image_data || null, notes: c.notes || '', status: c.status || 'draft',
     date: c.date ? c.date.slice(0, 10) : '', time: c.time ? c.time.slice(0, 5) : '',
     created_by: c.created_by || '',
+    flow_id: c.flow_id || null, flow_name: c.flow_name || null,
+    flow_step: c.flow_step || null, flow_total: c.flow_total || null,
+    step_reason: c.step_reason || null,
   }
 }
 
