@@ -21,9 +21,11 @@ const VIEWS = [
 export default function CalendarView({ cards, brands, filters, onDayClick, onCardClick, onCardDrop, onStash }) {
   const calRef = useRef(null)
   const backlogRef = useRef(null)
+  const stashZoneRef = useRef(null)
   const [title, setTitle] = useState('')
   const [activeView, setActiveView] = useState('dayGridMonth')
   const [showBacklog, setShowBacklog] = useState(true)
+  const [draggingEvent, setDraggingEvent] = useState(false)
 
   const filtered = cards.filter(c => {
     if (filters.brand && c.brand_id !== filters.brand) return false
@@ -77,6 +79,18 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
   function handleEventDrop({ event, revert }) {
     const dateStr = event.startStr.slice(0, 10)
     onCardDrop(event.id, dateStr).catch(() => revert())
+  }
+
+  // Dragging a calendar card onto the Stash panel parks it
+  function handleEventDragStop({ event, jsEvent }) {
+    setDraggingEvent(false)
+    const zone = stashZoneRef.current
+    if (!zone) return
+    const r = zone.getBoundingClientRect()
+    if (jsEvent.clientX >= r.left && jsEvent.clientX <= r.right &&
+        jsEvent.clientY >= r.top && jsEvent.clientY <= r.bottom) {
+      onStash(event.id, true)
+    }
   }
 
   // External drop from backlog panel
@@ -172,6 +186,8 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
           droppable={true}
           drop={handleExternalDrop}
           eventDrop={handleEventDrop}
+          eventDragStart={() => setDraggingEvent(true)}
+          eventDragStop={handleEventDragStop}
           dateClick={({ dateStr }) => onDayClick(dateStr.slice(0, 10))}
           eventClick={({ event }) => onCardClick(event.extendedProps.card)}
           height="100%"
@@ -206,19 +222,26 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
               ))}
             </div>
 
-            {/* Stash section */}
-            <div className="px-4 py-3 border-y border-gray-100 sticky top-0 bg-amber-50/70 z-10">
-              <p className="font-bold text-amber-800 text-sm flex items-center gap-1.5">🗃 Stash <span className="text-amber-500 font-semibold">({stash.length})</span></p>
-              <p className="text-[11px] text-amber-600/80 mt-0.5">Unused cards parked for later — drag onto a date to reuse</p>
-            </div>
-            <div className="p-2 space-y-1.5 bg-amber-50/40 min-h-16">
-              {stash.length === 0 && (
-                <p className="text-xs text-amber-600/60 text-center py-4">Empty — stash cards you don't need yet</p>
-              )}
-              {stash.map(card => (
-                <DrawerChip key={card.id} card={card} brands={brands} onCardClick={onCardClick}
-                  action={{ icon: '↩', title: 'Return to backlog', onClick: () => onStash(card.id, false) }} />
-              ))}
+            {/* Stash section — drop zone for calendar cards */}
+            <div ref={stashZoneRef}
+              className={`transition-all ${draggingEvent ? 'ring-2 ring-amber-400 ring-inset rounded-xl' : ''}`}>
+              <div className={`px-4 py-3 border-y border-gray-100 sticky top-0 z-10 ${draggingEvent ? 'bg-amber-200/80' : 'bg-amber-50/70'}`}>
+                <p className="font-bold text-amber-800 text-sm flex items-center gap-1.5">🗃 Stash <span className="text-amber-500 font-semibold">({stash.length})</span></p>
+                <p className="text-[11px] text-amber-600/80 mt-0.5">
+                  {draggingEvent ? '⬇ Drop here to stash this card' : 'Unused cards parked for later — drag onto a date to reuse'}
+                </p>
+              </div>
+              <div className={`p-2 space-y-1.5 min-h-24 ${draggingEvent ? 'bg-amber-100/70' : 'bg-amber-50/40'}`}>
+                {stash.length === 0 && (
+                  <p className="text-xs text-amber-600/60 text-center py-4">
+                    {draggingEvent ? 'Release to park this card 🗃' : 'Empty — drag calendar cards here to park them'}
+                  </p>
+                )}
+                {stash.map(card => (
+                  <DrawerChip key={card.id} card={card} brands={brands} onCardClick={onCardClick}
+                    action={{ icon: '↩', title: 'Return to backlog', onClick: () => onStash(card.id, false) }} />
+                ))}
+              </div>
             </div>
           </div>
         </aside>
@@ -243,7 +266,7 @@ function DrawerChip({ card, brands, onCardClick, action }) {
       <button
         title={action.title}
         onClick={e => { e.stopPropagation(); action.onClick() }}
-        className="absolute top-1.5 right-1.5 text-xs opacity-0 group-hover:opacity-100 hover:scale-125 transition-all"
+        className="absolute top-1.5 right-1.5 text-xs opacity-50 hover:opacity-100 hover:scale-125 transition-all"
       >
         {action.icon}
       </button>
