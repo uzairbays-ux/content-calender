@@ -18,7 +18,7 @@ function getProgress(form) {
   return { done, total: CHECKLIST.length, pct: Math.round((done / CHECKLIST.length) * 100) }
 }
 
-export default function CardModal({ card, defaultDate, brands, audiences, onSave, onClose, onDelete }) {
+export default function CardModal({ card, defaultDate, brands, audiences, onSave, onClose, onStash, onDelete }) {
   const isEdit = Boolean(card)
   const [form, setForm] = useState(card ? mapCard(card) : { ...EMPTY, date: defaultDate || '' })
   const [tab, setTab] = useState('brief')
@@ -268,8 +268,16 @@ export default function CardModal({ card, defaultDate, brands, audiences, onSave
 
         {/* Footer */}
         <div className="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-3">
             {isEdit && <button onClick={() => { onDelete(card.id); onClose() }} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete Card</button>}
+            {isEdit && onStash && (
+              <button
+                onClick={() => { onStash(card.id, !card.stashed); onClose() }}
+                title={card.stashed ? 'Return to backlog' : 'Remove from calendar and park for later'}
+                className="text-amber-600 hover:text-amber-800 text-sm font-medium">
+                {card.stashed ? '↩ Unstash' : '🗃 Stash for later'}
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {!isComplete && (

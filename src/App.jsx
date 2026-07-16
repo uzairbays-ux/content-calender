@@ -208,6 +208,7 @@ export default function App() {
           audiences={audiences}
           onSave={handleSave}
           onClose={() => setModal(null)}
+          onStash={stashCard}
           onDelete={deleteCard}
         />
       )}
