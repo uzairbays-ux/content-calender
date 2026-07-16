@@ -82,9 +82,22 @@ router.patch('/:id/status', async (req, res) => {
 
 router.patch('/:id/date', async (req, res) => {
   const { date } = req.body
+  // placing a card on the calendar always takes it out of the stash
   const { rows } = await pool.query(
-    `UPDATE content_cards SET date=$1, updated_at=NOW() WHERE id=$2 RETURNING *`,
+    `UPDATE content_cards SET date=$1, stashed=false, updated_at=NOW() WHERE id=$2 RETURNING *`,
     [date, req.params.id]
+  )
+  res.json(rows[0])
+})
+
+router.patch('/:id/stash', async (req, res) => {
+  const { stashed } = req.body
+  // stashing removes the card from the calendar; unstashing returns it to the backlog
+  const { rows } = await pool.query(
+    stashed
+      ? `UPDATE content_cards SET stashed=true, date=NULL, time=NULL, updated_at=NOW() WHERE id=$1 RETURNING *`
+      : `UPDATE content_cards SET stashed=false, updated_at=NOW() WHERE id=$1 RETURNING *`,
+    [req.params.id]
   )
   res.json(rows[0])
 })

@@ -2,13 +2,15 @@ import { useState } from 'react'
 import { PLATFORMS, STATUSES } from '../data/constants'
 import { CHECKLIST } from './checklist.js'
 
-export default function LibraryView({ cards, brands, filters, onCardClick }) {
+export default function LibraryView({ cards, brands, filters, onCardClick, onStash }) {
   const [search, setSearch] = useState('')
   const [brandFilter, setBrandFilter] = useState('')
 
-  // Backlog = cards without a date
+  const stashed = cards.filter(c => c.stashed)
+
+  // Backlog = cards without a date (stashed cards live in their own section)
   const backlog = cards.filter(c => {
-    if (c.date) return false
+    if (c.date || c.stashed) return false
     if (filters.brand && c.brand_id !== filters.brand) return false
     if (filters.platform && c.platform !== filters.platform) return false
     if (filters.status && c.status !== filters.status) return false
@@ -74,6 +76,33 @@ export default function LibraryView({ cards, brands, filters, onCardClick }) {
           <p className="text-lg font-medium">Library is empty</p>
           <p className="text-sm">Cards without a date land here — your content backlog</p>
         </div>
+      )}
+
+      {/* Stash — parked cards */}
+      {stashed.length > 0 && (
+        <section className="bg-amber-50/60 border border-amber-100 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-bold text-amber-800 text-sm">🗃 Stash</h3>
+            <span className="text-xs text-amber-500 font-semibold">({stashed.length})</span>
+          </div>
+          <p className="text-xs text-amber-600/80 mb-3">Unused cards parked for later — restore to backlog or drag onto the calendar from the Calendar view.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {stashed.map(card => {
+              const brand = brands.find(b => b.id === card.brand_id)
+              return (
+                <div key={card.id} className="relative">
+                  <LibraryCard card={card} brand={brand} onClick={() => onCardClick(card)} />
+                  <button
+                    onClick={() => onStash(card.id, false)}
+                    title="Return to backlog"
+                    className="absolute top-2 right-2 text-xs bg-white/90 border border-amber-200 text-amber-700 rounded-full px-2 py-0.5 font-medium hover:bg-amber-100 shadow-sm">
+                    ↩ Restore
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </section>
       )}
 
       {/* Groups */}

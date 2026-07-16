@@ -19,6 +19,7 @@ export const api = {
     update: (id, data) => request(`/cards/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     updateStatus: (id, status) => request(`/cards/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
     updateDate: (id, date) => request(`/cards/${id}/date`, { method: 'PATCH', body: JSON.stringify({ date }) }),
+    stash: (id, stashed) => request(`/cards/${id}/stash`, { method: 'PATCH', body: JSON.stringify({ stashed }) }),
     delete: (id) => request(`/cards/${id}`, { method: 'DELETE' }),
   },
   brands: {

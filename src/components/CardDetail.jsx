@@ -1,6 +1,6 @@
 import { PLATFORMS, STATUSES } from '../data/constants'
 
-export default function CardDetail({ card, brands, onClose, onEdit, onStatusChange, onDelete }) {
+export default function CardDetail({ card, brands, onClose, onEdit, onStatusChange, onStash, onDelete }) {
   const brand = brands.find(b => b.id === card.brand_id)
   const platform = PLATFORMS.find(p => p.id === card.platform)
   const status = STATUSES.find(s => s.id === card.status)
@@ -120,6 +120,12 @@ export default function CardDetail({ card, brands, onClose, onEdit, onStatusChan
             Delete
           </button>
           <div className="flex gap-2">
+            <button
+              onClick={() => { onStash(card.id, !card.stashed); onClose() }}
+              title={card.stashed ? 'Return to backlog' : 'Remove from calendar and park for later'}
+              className="px-4 py-2 text-sm font-medium text-amber-700 border border-amber-200 bg-amber-50 rounded-lg hover:bg-amber-100">
+              {card.stashed ? '↩ Unstash' : '🗃 Stash for later'}
+            </button>
             <button onClick={onEdit}
               className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
               ✏️ Edit Brief

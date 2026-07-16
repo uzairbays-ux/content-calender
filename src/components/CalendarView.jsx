@@ -18,7 +18,7 @@ const VIEWS = [
   { id: 'timeGridDay', label: 'Day' },
 ]
 
-export default function CalendarView({ cards, brands, filters, onDayClick, onCardClick, onCardDrop }) {
+export default function CalendarView({ cards, brands, filters, onDayClick, onCardClick, onCardDrop, onStash }) {
   const calRef = useRef(null)
   const backlogRef = useRef(null)
   const [title, setTitle] = useState('')
@@ -32,8 +32,8 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
     return true
   })
 
-  // Only dated cards become calendar events
-  const events = filtered.filter(c => c.date).map(card => {
+  // Only dated, non-stashed cards become calendar events
+  const events = filtered.filter(c => c.date && !c.stashed).map(card => {
     const brand = brands.find(b => b.id === card.brand_id)
     const platform = PLATFORMS.find(p => p.id === card.platform)
     const brandColor = brand?.color || STATUS_COLORS[card.status] || '#1976d2'
@@ -54,17 +54,18 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
     }
   })
 
-  // Undated cards = backlog (draggable onto dates)
-  const backlog = filtered.filter(c => !c.date)
+  // Undated cards = backlog; stashed cards = parked for later (both draggable onto dates)
+  const backlog = filtered.filter(c => !c.date && !c.stashed)
+  const stash = filtered.filter(c => c.stashed)
 
-  // Register the backlog panel as an external drag source for FullCalendar
+  // Register the drawer (backlog + stash) as an external drag source for FullCalendar
   useEffect(() => {
     if (!backlogRef.current) return
     const draggable = new Draggable(backlogRef.current, {
       itemSelector: '[data-card-id]',
     })
     return () => draggable.destroy()
-  }, [showBacklog, backlog.length])
+  }, [showBacklog, backlog.length, stash.length])
 
   const api = () => calRef.current?.getApi()
 
@@ -153,9 +154,9 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
                   : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
             >
               📚 Backlog
-              {backlog.length > 0 && (
+              {(backlog.length + stash.length) > 0 && (
                 <span className="bg-blue-500 text-white rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none">
-                  {backlog.length}
+                  {backlog.length + stash.length}
                 </span>
               )}
             </button>
@@ -186,37 +187,66 @@ export default function CalendarView({ cards, brands, filters, onDayClick, onCar
         />
       </div>
 
-      {/* Backlog drawer — desktop only */}
+      {/* Backlog + Stash drawer — desktop only */}
       {showBacklog && (
         <aside className="hidden lg:flex flex-col w-60 shrink-0 bg-white rounded-2xl card-shadow overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="font-bold text-gray-800 text-sm flex items-center gap-1.5">📚 Backlog <span className="text-gray-400 font-semibold">({backlog.length})</span></p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Drag a card onto a date to schedule it</p>
-          </div>
-          <div ref={backlogRef} className="flex-1 overflow-y-auto p-2 space-y-1.5">
-            {backlog.length === 0 && (
-              <p className="text-xs text-gray-400 text-center py-8">No unscheduled cards 🎉</p>
-            )}
-            {backlog.map(card => {
-              const brand = brands.find(b => b.id === card.brand_id)
-              return (
-                <div
-                  key={card.id}
-                  data-card-id={card.id}
-                  onClick={() => onCardClick(card)}
-                  className="rounded-lg border border-gray-100 bg-white px-2.5 py-2 cursor-grab active:cursor-grabbing hover:border-blue-200 hover:bg-blue-50/40 transition-colors select-none"
-                  style={{ borderLeft: `3px solid ${brand?.color || '#94a3b8'}` }}
-                >
-                  <p className="text-xs font-semibold text-gray-700 leading-snug line-clamp-2">
-                    {card.title || card.product_name || card.collection || 'Untitled'}
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{brand?.name || card.brand_name}</p>
-                </div>
-              )
-            })}
+          <div ref={backlogRef} className="flex-1 overflow-y-auto">
+            {/* Backlog section */}
+            <div className="px-4 py-3 border-b border-gray-100 sticky top-0 bg-white z-10">
+              <p className="font-bold text-gray-800 text-sm flex items-center gap-1.5">📚 Backlog <span className="text-gray-400 font-semibold">({backlog.length})</span></p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Drag onto a date to schedule</p>
+            </div>
+            <div className="p-2 space-y-1.5">
+              {backlog.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-4">No unscheduled cards 🎉</p>
+              )}
+              {backlog.map(card => (
+                <DrawerChip key={card.id} card={card} brands={brands} onCardClick={onCardClick}
+                  action={{ icon: '🗃', title: 'Stash for later', onClick: () => onStash(card.id, true) }} />
+              ))}
+            </div>
+
+            {/* Stash section */}
+            <div className="px-4 py-3 border-y border-gray-100 sticky top-0 bg-amber-50/70 z-10">
+              <p className="font-bold text-amber-800 text-sm flex items-center gap-1.5">🗃 Stash <span className="text-amber-500 font-semibold">({stash.length})</span></p>
+              <p className="text-[11px] text-amber-600/80 mt-0.5">Unused cards parked for later — drag onto a date to reuse</p>
+            </div>
+            <div className="p-2 space-y-1.5 bg-amber-50/40 min-h-16">
+              {stash.length === 0 && (
+                <p className="text-xs text-amber-600/60 text-center py-4">Empty — stash cards you don't need yet</p>
+              )}
+              {stash.map(card => (
+                <DrawerChip key={card.id} card={card} brands={brands} onCardClick={onCardClick}
+                  action={{ icon: '↩', title: 'Return to backlog', onClick: () => onStash(card.id, false) }} />
+              ))}
+            </div>
           </div>
         </aside>
       )}
+    </div>
+  )
+}
+
+function DrawerChip({ card, brands, onCardClick, action }) {
+  const brand = brands.find(b => b.id === card.brand_id)
+  return (
+    <div
+      data-card-id={card.id}
+      onClick={() => onCardClick(card)}
+      className="group rounded-lg border border-gray-100 bg-white px-2.5 py-2 cursor-grab active:cursor-grabbing hover:border-blue-200 hover:bg-blue-50/40 transition-colors select-none relative"
+      style={{ borderLeft: `3px solid ${brand?.color || '#94a3b8'}` }}
+    >
+      <p className="text-xs font-semibold text-gray-700 leading-snug line-clamp-2 pr-5">
+        {card.title || card.product_name || card.collection || 'Untitled'}
+      </p>
+      <p className="text-[10px] text-gray-400 mt-0.5">{brand?.name || card.brand_name}</p>
+      <button
+        title={action.title}
+        onClick={e => { e.stopPropagation(); action.onClick() }}
+        className="absolute top-1.5 right-1.5 text-xs opacity-0 group-hover:opacity-100 hover:scale-125 transition-all"
+      >
+        {action.icon}
+      </button>
     </div>
   )
 }

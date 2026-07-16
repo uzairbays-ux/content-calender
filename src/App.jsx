@@ -9,7 +9,7 @@ import CardModal from './components/CardModal'
 import CardDetail from './components/CardDetail'
 
 export default function App() {
-  const { cards, loading, error, addCard, updateCard, updateStatus, moveCard, deleteCard } = useCards()
+  const { cards, loading, error, addCard, updateCard, updateStatus, moveCard, stashCard, deleteCard } = useCards()
   const { brands, addBrand } = useBrands()
   const { audiences } = useAudiences()
 
@@ -120,6 +120,7 @@ export default function App() {
               onDayClick={date => setModal({ mode: 'new', date })}
               onCardClick={handleCardClick}
               onCardDrop={moveCard}
+              onStash={stashCard}
             />
           )}
           {view === 'flows' && (
@@ -136,6 +137,7 @@ export default function App() {
               brands={brands}
               filters={filters}
               onCardClick={handleCardClick}
+              onStash={stashCard}
             />
           )}
           {view === 'executor' && (
@@ -216,6 +218,7 @@ export default function App() {
           onClose={() => setModal(null)}
           onEdit={() => setModal({ mode: 'edit', card: modal.card })}
           onStatusChange={updateStatus}
+          onStash={stashCard}
           onDelete={deleteCard}
         />
       )}

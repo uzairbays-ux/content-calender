@@ -43,12 +43,17 @@ export function useCards() {
     setCards(prev => prev.map(c => c.id === id ? updated : c))
   }
 
+  async function stashCard(id, stashed) {
+    const updated = await api.cards.stash(id, stashed)
+    setCards(prev => prev.map(c => c.id === id ? updated : c))
+  }
+
   async function deleteCard(id) {
     await api.cards.delete(id)
     setCards(prev => prev.filter(c => c.id !== id))
   }
 
-  return { cards, loading, error, addCard, updateCard, updateStatus, moveCard, deleteCard, refetch: fetchCards }
+  return { cards, loading, error, addCard, updateCard, updateStatus, moveCard, stashCard, deleteCard, refetch: fetchCards }
 }
 
 export function useBrands() {

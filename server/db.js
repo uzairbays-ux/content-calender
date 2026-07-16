@@ -55,6 +55,7 @@ export async function initDB() {
     ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS flow_step INT;
     ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS flow_total INT;
     ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS step_reason TEXT;
+    ALTER TABLE content_cards ADD COLUMN IF NOT EXISTS stashed BOOLEAN DEFAULT false;
   `)
   console.log('DB tables ready')
 }
